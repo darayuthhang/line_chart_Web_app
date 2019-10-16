@@ -1,0 +1,421 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://code.highcharts.com/highcharts.src.js"></script>
+
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<!-- <link rel="stylesheet" type="text/css" href="{% static 'my_app/style.css' %}"> -->
+	<title>Document</title>
+</head>
+<style>
+
+
+/******** set the the default margin to 0 ***/
+/***** set root font-size to 10px so that we can use em 1 * 10 *****/
+html{
+	margin:0;
+	padding: 0;
+	font-size: 10px;
+}
+
+/******* root of nav bar main page ******/
+.container_nav_bar {
+  border: 5px solid black;
+  display: grid;
+  justify-items: end;
+	background: black;
+  height: 8em;
+  border-radius: 1em;
+}
+/******* add grid to lists_item, to give column as three columns********/
+.container_nav_bar .list_items{
+
+
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr ;
+	grid-column-gap: 1em;
+	grid-row-gap: 1em;
+	font-size: 2em;
+	background: black;
+}
+#bar-chart{
+	margin-top: 2em;
+}
+/******* remove the underline, and add style to list_item in navbar ******/
+.container_nav_bar a{
+
+	text-decoration: none;
+	list-style: none;
+	border: 0.1em solid red;
+	color: white;
+	padding: 1em;
+	font-size: 1em;
+	border-radius: 1em;
+}
+.container_nav_bar a:hover{
+	background: violet;
+}
+/*********navBar finish ***********************/
+
+/**** resize the image *****/
+#wrapper{
+	margin-top: 4em;
+	display: grid;
+	justify-content: center;
+	border: 10px solid rgb(36, 37, 37);
+	background: rgb(36, 37, 37);
+}
+#container-image-grid{
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-row-gap: 3em;
+	width: 70em;
+	background: black;
+	border: 5px solid grey;
+}
+#image-grid-box{
+	display: grid;
+	grid-template-columns: 1fr;
+	align-content: center;
+	width: 20em;
+	border: 5px solid black;
+	box-shadow: 1em 1em 0.5em grey;
+	justify-items: center;
+	text-decoration: none;
+}
+#img-size{
+   height: 20em;
+   width: 20em;
+}
+#username{
+	font-size: 2em;
+	color: white;
+}
+#total_likes{
+	font-size: 2em;
+	color: white;
+}
+#cross-box {
+	position: relative;
+    background: rgb(175, 54, 6);
+    color: #fff;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+    width: 10em;
+    height: 1em;
+    border-radius: 5px;
+}
+/******* set 3 d animation when the user hover the grid-box-image ****/
+.threeD{
+	perspective: 10em;
+}
+.threeD #image-grid-box:hover{
+	transform: rotateY(-5deg);
+}
+/*********design stop, and add button**********************/
+.stopBtn{
+	border: 5px solid rgb(245, 160, 4);
+	border-radius: 5em;
+	width: 10em;
+	height: 5em;
+	outline: 0;
+	background: rgb(245, 160, 4);
+	color:white;
+}
+.stopBtn:hover{
+	cursor: pointer;
+	background-color: #FABD44;
+}
+.addBtn{
+	border: 5px solid rgb(245, 160, 4);
+	border-radius: 5em;
+	width: 10em;
+	height: 5em;
+	outline: 0;
+	margin-top: 1em;
+	background: rgb(245, 160, 4);
+	color:white;
+}
+.addBtn:hover{
+	cursor: pointer;
+	background-color: #FABD44;
+}
+@media only screen and (max-width: 60em) {
+
+  #container-image-grid{
+	  display: grid;
+	  grid-template-columns: 1fr;
+	  width: 25em;
+
+  }
+}
+
+</style>
+<body>
+	<nav class="container_nav_bar">
+
+		<ul class="nav_bar">
+			<li class="list_items">
+				<a href="https://github.com/darayuthhang">Project</a>
+				<a href="{% url 'my_app:register' %}">Register</a>
+				<!------ when the user is login -->
+				<!------  show the log out button-->
+				{% if user.is_authenticated %}
+					<a href="{% url 'my_app:logout' %}">Log out </a>
+				{% else %}
+					<a href="{% url 'my_app:user_login' %}">Log in</a>
+				{% endif %}
+		</ul>
+	</nav>
+
+
+	<div class="container">
+			<!---- BarChart-->
+					<div id="bar-chart"></div>
+						<input class="stopBtn" id="stopAnimation" type="button" value="Stop" >
+						<input class="addBtn" id="addItem" type="button" value="Add" >
+						<form action="{% url 'my_app:index' %}" method="POST">{% csrf_token %}
+							<input class="addBtn" id="newItems" type="submit" value="new" >
+						</form>
+						<div id="wrapper">
+							<div class="threeD" id="container-image-grid">
+							</div>
+						</div>
+
+
+	</div>
+	<script>
+//*********************************************BarChart *****************start*************/
+		function barChart(){
+				Highcharts.chart('bar-chart', {
+					chart: {
+						type: ''
+					},
+					title: {
+						text: 'Unplash Image'
+					},
+					yAxis: {
+						title: {
+							text: 'unplash data users.'
+						}
+					},
+					xAxis: {
+
+						//name of the catgeoreies in axis
+						//data come trustred resource so
+						//it find to use escapejs
+
+						categories: {{ username|safe }},
+					},
+					series: [{
+						name: 'Total Likes of Profile Image 2019',
+						data: {{ total_likes_of_profile|safe }},
+					}, {
+						name: 'Total Of Username 2019',
+						data: {{ total_likes_of_cover_photo|safe }},
+					}, {
+						name: 'name of users 2019',
+						data: [null]
+					}]
+				});
+
+
+		}
+//*********************************************BarChart *****************end*************/
+//*********************************************Animation Class *****************start*************/
+				class Animation{
+					constructor(degree){
+						this.degree = degree;
+						this.init;
+						this.valueOfBtn;
+					}
+					setImageAnimation(){
+						let imageRotate = document.getElementById('container-image-grid');
+						imageRotate.style.transform = "rotate" + "("+ this.degree + "deg" + ")";
+						imageRotate.style.webkittransform = "rotate" + "("+ this.degree + "deg" + ")";
+						this.degree++;
+					}
+					setButtonAnimation(){
+						let button = document.getElementById('stopAnimation');
+						let stopAndStartBtn = function(){
+							this.valueOfBtn = button.value;
+							if(this.valueOfBtn.toLowerCase() === 'stop'){
+								//stop animation then change button value;
+								document.getElementById('stopAnimation').value = "Start";
+								this.getStopButtonAnimation();
+							}else if(this.valueOfBtn.toLowerCase() === "start"){
+								document.getElementById('stopAnimation').value = "Stop";
+								this.getImageAnimation();
+							}
+						}.bind(this);
+					   button.addEventListener('click', stopAndStartBtn);
+					}
+					getImageAnimation(){
+						let startAnimation = function(){
+							this.setImageAnimation();
+						}.bind(this);
+						this.init = setInterval(startAnimation, 100);
+					}
+					getStopButtonAnimation(){
+						clearInterval(this.init);
+					}
+				}
+//*********************************************Animation Class *****************finish*************/
+
+//*********************************************DynamicPicture Class *****************start*************/
+			 class DynamicPicture{
+				   constructor(){
+					  this.anchor = null;
+				   };
+				   	createDivCrossBox(){
+						let div = document.createElement('div');
+						let span = document.createElement('span');
+						let text = document.createTextNode('X');
+						div.id="cross-box";
+						span.appendChild(text);
+						div.appendChild(span);
+						return div;
+
+					}
+					 createImageElement(image){
+						let img = document.createElement("IMG");
+						img.setAttribute("src", image);
+						img.id = "img-size";
+						return img;
+					}
+					 createParaUsernameElement(name){
+						let p = document.createElement("p");
+						let textNode = document.createTextNode("username: "+ name);
+						p.id = "username";
+						p.appendChild(textNode);
+						return p;
+					}
+					 createParaTotalLikeElement(likes){
+						let p = document.createElement("p");
+						let textNode = document.createTextNode("Total Likes: "+ likes);
+						p.id = "total_likes";
+						p.appendChild(textNode);
+						return p;
+					}
+					 AchorTageRootImage(name, image, likes){
+						let anchorRoot = document.createElement('a');
+						anchorRoot.id = "image-grid-box";
+						let crossbox = this.createDivCrossBox();
+						let totalLikes = this.createParaTotalLikeElement(likes);
+						let img = this.createImageElement(image);
+						let username = this.createParaUsernameElement(name);
+						//image tag, paragrap username, and totalike tag into
+						//the parent anchorTag.
+						anchorRoot.appendChild(crossbox);
+						anchorRoot.appendChild(img);
+						anchorRoot.appendChild(username);
+						anchorRoot.appendChild(totalLikes);
+						return anchorRoot;
+					}
+			 }
+//*********************************************DynamicPicture Class finish******************************/
+
+
+//*************dynamicpictureMain ******************************************************************************************//
+	function dynamicPictureMain() {
+					dynamicPicture = new DynamicPicture()
+
+					let rootImgContainer = document.getElementById("container-image-grid");
+					let gridBoximage;
+					const SIZE_OF_GRID_BOX_IMAGE = 10;
+					//this is fixed sized array.
+
+					//addd Buttton
+					let add = document.getElementById('addItem');
+					let Key = 0;
+					let countCapacity= 0 ;
+
+					firstSixItemsDisplay();
+					addGridImageBox()
+		//********************************************* (firstSixItemsDisplay) function nested inside dynamicPictureMain******************************//
+					function firstSixItemsDisplay() {
+						for (let position = 0; position < dataContainer.length; position++) {
+							//assign the last position of these gridboxes
+							//to key so that when the user push add Button.
+							//we will be able to add the item after.
+							gridBoxImage = dynamicPicture.AchorTageRootImage(dataContainer[position].name, dataContainer[position].image, dataContainer[position].likes);
+							//add EventListerner to Crossbox
+							gridBoxImage.addEventListener('click', function (event) {
+
+								//delete the image when you double click.
+								deleteGridImageBox(position);
+							});
+							//store all the object inside gridBoxImage into map.
+							map.set(position, gridBoxImage);
+						}
+
+					}
+		//********************************************* (addGridImageBox) function nested inside dynamicPictureMain******************************//
+					//add gripboxImage to front-end.
+					function addGridImageBox() {
+							Key = map.size-4;
+							console.log("size of javascript map"+map.size);
+							for (let i = 0; i < map.size-4; i++) {
+								let randomNumber = Math.floor((Math.random() * 9) + 1);
+								console.log("random" + randomNumber);
+								let item = map.get(randomNumber);
+								rootImgContainer.appendChild(item);
+								countCapacity++;
+							}
+
+							add.addEventListener('click', function () {
+								if (countCapacity == SIZE_OF_GRID_BOX_IMAGE) {
+									alert("You can only add up to 10 items");
+								} else {
+									countCapacity++;
+									//add the gridBoxImage with html tag inside to the front_end.
+									rootImgContainer.appendChild(map.get(Key));
+									Key++;
+									//check if key map reach to maximum 9
+									//reset the key back to 0 so that
+									//it will not limit key to access the
+									//value in the hashmap.
+									if(Key == SIZE_OF_GRID_BOX_IMAGE){
+										Key = 0 ;
+									}
+								}
+							})
+					}
+		//********************************************* (deleteGridImageBox) function nested inside dynamicPictureMain******************************//
+					function deleteGridImageBox(position) {
+						countCapacity--;
+						let item = map.get(position);
+						rootImgContainer.removeChild(item);
+						Key = position;
+					}
+
+}
+
+//*************main ******************************************************************************************//
+				function rotateImageMain() {
+					rotateImage = new Animation(20);
+					rotateImage.setImageAnimation()
+					rotateImage.getImageAnimation();
+					rotateImage.setButtonAnimation();
+				}
+				function main(){
+				   barChart();
+				   rotateImageMain();
+				   dynamicPictureMain();
+				}
+
+			//receieve data from django
+			let dataContainer = {{ User| safe}};
+			let map = new Map();
+			main()
+
+	</script>
+</body>
+</html>
